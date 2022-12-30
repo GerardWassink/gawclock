@@ -30,9 +30,12 @@
  * ------------------------------------------------------------------------- */
 
 
-/* ------------------------------------------------------------------------- *
- *       Switch debugging on / off (compiler directives)
- * ------------------------------------------------------------------------- */
+#include <Arduino.h>
+#include <TM1637Display.h>
+
+#include <DS3231.h>
+#include <Wire.h>
+
 #define DEBUG 0
 
 #if DEBUG == 1
@@ -45,22 +48,91 @@
   #define debugln(x)
 #endif
 
-/* ------------------------------------------------------------------------- *
- *       Include libraries for peripherals & Arduino stuff
- * ------------------------------------------------------------------------- */
-#include <Wire.h>                           // I2C comms library
-#include <LiquidCrystal_I2C.h>              // LCD library
+/* -------------------------------------------------------------------------- *
+ * Definitions for clock module
+ * -------------------------------------------------------------------------- */
+DS3231 myRTC;                       // --- clock object
 
-#include <Arduino.h>                        // Arduino lib
-#include <TM1637Display.h>                  // 7 segment LED display library
+bool century = false;               //
+bool h12Flag;                       //
+bool pmFlag;                        //
+bool showDots = true;               //
+
+/* -------------------------------------------------------------------------- *
+ * Definitions for display module
+ * -------------------------------------------------------------------------- */
+#define CLK 2                       // Module connection pins
+#define DIO 3                       //  (Digital Pins)
+
+TM1637Display display(CLK, DIO);    // display object
 
 
-void setup() {
-  // put your setup code here, to run once:
+/* -------------------------------------------------------------------------- *
+ * General global definitions
+ * -------------------------------------------------------------------------- */
+#define DATETIME 4
 
+const uint8_t SEG_DONE[] = {
+  SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
+  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,   // O
+  SEG_C | SEG_E | SEG_G,                           // n
+  SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            // E
+  };
+
+#define timeDispInterval 1000
+
+long timeDispPreviousMillis = 1000; // Make timeouts work first time
+
+
+void setup()
+{
+  debugstart(115200);
+  debugln("Program start");
+  
+  Wire.begin();                     // Start the I2C interface
+  
+  pinMode(DATETIME, INPUT);         // Setup date time pin
+  digitalWrite(DATETIME, HIGH);     //  to switch date / time
+  
+  display.clear();                  // Clear LED display
+  display.setBrightness( 1 );      // Start with low brightness
+  
+  myRTC.setClockMode(false);      // set for 24 hour clock
+
+  /* Set time to Epoch for local time, see: https://www.epochconverter.com/ */ 
+  // myRTC.setEpoch((time_t)1672410720, true);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
 
+
+void loop() {
+  
+  unsigned long currentMillis = millis();
+  
+  /*                                       Look for latitude /longtitude */
+  if(currentMillis - timeDispPreviousMillis > timeDispInterval) {
+    timeDispPreviousMillis = currentMillis;         // save the last time we displayed
+    if (digitalRead(DATETIME)) {
+      showDate();
+    } else {
+      showTime();
+    }
+  }
+}
+
+
+void showDate() {
+  display.showNumberDecEx(myRTC.getDate(), 0b00000000, true, 2, 0);
+  display.showNumberDec(myRTC.getMonth(century), true, 2, 2);
+}
+
+
+void showTime() {
+  showDots = !showDots;
+  if (showDots) {
+    display.showNumberDecEx(myRTC.getHour(h12Flag, pmFlag), 0b11100000, true, 2, 0);
+  } else {
+    display.showNumberDecEx(myRTC.getHour(h12Flag, pmFlag), 0b00000000, true, 2, 0);
+  }
+  display.showNumberDec(myRTC.getMinute(), true, 2, 2);
 }

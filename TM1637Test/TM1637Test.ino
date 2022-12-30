@@ -1,12 +1,43 @@
 #include <Arduino.h>
 #include <TM1637Display.h>
 
-// Module connection pins (Digital Pins)
-#define CLK 2
-#define DIO 3
+#include <DS3231.h>
+#include <Wire.h>
 
-// The amount of time (in milliseconds) between tests
-#define TEST_DELAY   2000
+#define DEBUG 1
+
+#if DEBUG == 1
+  #define debugstart(x) Serial.begin(x)
+  #define debug(x) Serial.print(x)
+  #define debugln(x) Serial.println(x)
+#else
+  #define debugstart(x)
+  #define debug(x)
+  #define debugln(x)
+#endif
+
+/* -------------------------------------------------------------------------- *
+ * Definitions for clock module
+ * -------------------------------------------------------------------------- */
+DS3231 myRTC;                       // --- clock object
+
+bool century = false;               //
+bool h12Flag;                       //
+bool pmFlag;                        //
+
+/* -------------------------------------------------------------------------- *
+ * Definitions for display module
+ * -------------------------------------------------------------------------- */
+#define CLK 2                       // Module connection pins
+#define DIO 3                       //  (Digital Pins)
+
+TM1637Display display(CLK, DIO);    // display object
+
+
+/* -------------------------------------------------------------------------- *
+ * General globl definitions
+ * -------------------------------------------------------------------------- */
+#define TEST_DELAY   2000           // amount of time (in ms) between tests
 
 const uint8_t SEG_DONE[] = {
 	SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
@@ -15,24 +46,36 @@ const uint8_t SEG_DONE[] = {
 	SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            // E
 	};
 
-TM1637Display display(CLK, DIO);
+
 
 void setup()
 {
+  debugstart(115200);
+  debugln("Program start");
+
+  Wire.begin();                     // Start the I2C interface
+
+  display.setBrightness(0x07);
+  display.clear();
+
+
 }
 
 void loop()
 {
+
   int k;
   uint8_t data[] = { 0xff, 0xff, 0xff, 0xff };
   uint8_t blank[] = { 0x00, 0x00, 0x00, 0x00 };
   display.setBrightness(0x0f);
 
   // All segments on
+  debugln("All segments on");
   display.setSegments(data);
   delay(TEST_DELAY);
 
   // Selectively set different digits
+  debugln("Selectively set different digits");
   data[0] = display.encodeDigit(0);
   data[1] = display.encodeDigit(1);
   data[2] = display.encodeDigit(2);
@@ -40,14 +83,9 @@ void loop()
   display.setSegments(data);
   delay(TEST_DELAY);
 
-  /*
-  for(k = 3; k >= 0; k--) {
-	display.setSegments(data, 1, k);
-	delay(TEST_DELAY);
-	}
-  */
-
+  debugln("Count down?");
   display.clear();
+  delay(TEST_DELAY);
   display.setSegments(data+2, 2, 2);
   delay(TEST_DELAY);
 
@@ -61,6 +99,8 @@ void loop()
 
 
   // Show decimal numbers with/without leading zeros
+  debugln("Show decimal numbers with/without leading zeros");
+  delay(TEST_DELAY);
   display.showNumberDec(0, false); // Expect: ___0
   delay(TEST_DELAY);
   display.showNumberDec(0, true);  // Expect: 0000
@@ -99,12 +139,14 @@ void loop()
   delay(TEST_DELAY);
   
 	// Run through all the dots
+  debugln("Run through all the dots");
 	for(k=0; k <= 4; k++) {
 		display.showNumberDecEx(0, (0x80 >> k), true);
 		delay(TEST_DELAY);
 	}
 
   // Brightness Test
+  debugln("Brightness Test");
   for(k = 0; k < 4; k++)
 	data[k] = 0xff;
   for(k = 0; k < 7; k++) {
@@ -114,6 +156,7 @@ void loop()
   }
   
   // On/Off test
+  debugln("On/Off test");
   for(k = 0; k < 4; k++) {
     display.setBrightness(7, false);  // Turn off
     display.setSegments(data);
@@ -125,7 +168,9 @@ void loop()
 
  
   // Done!
+  debugln("We're done!");
   display.setSegments(SEG_DONE);
 
   while(1);
+
 }
