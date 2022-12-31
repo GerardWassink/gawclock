@@ -99,8 +99,11 @@ void setup()
   
   myRTC.setClockMode(false);      // set for 24 hour clock
 
-  /* Set time to Epoch for local time, see: https://www.epochconverter.com/ */ 
-  // myRTC.setEpoch((time_t)1672410720, true);
+  /* ------------------------------------------------------------------------ *
+   * Set time to Epoch for local time, see: https://www.epochconverter.com/ 
+   *  after setting the clock, comment out this line!
+   * ------------------------------------------------------------------------ */
+  //myRTC.setEpoch((time_t)1672479510, true);
 }
 
 
