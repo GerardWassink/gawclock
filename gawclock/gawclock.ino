@@ -6,9 +6,11 @@
  * Versions:
  *   0.1  : Initial code base
  *   0.2  : Built in setting the clock
+ *   0.3  : Credits for used libraries
+ *          Code cleanup and more comments
  *   
  * ------------------------------------------------------------------------- */
-#define progVersion "0.2"                   // Program version definition
+#define progVersion "0.3"                   // Program version definition
 /* ------------------------------------------------------------------------- *
  *             GNU LICENSE CONDITIONS
  * ------------------------------------------------------------------------- *
@@ -30,6 +32,36 @@
  *       Copyright (C) December 2022 Gerard Wassink
  * ------------------------------------------------------------------------- */
 
+/* ------------------------------------------------------------------------- *
+ *             Credits to whom it is due                              DS3231
+ * ------------------------------------------------------------------------- *
+ * For the DS3231 clock module library:
+ * 
+ *   authors:
+ *   - family-names: "Ayars"
+ *     given-names: "Eric"
+ *     orcid: "https://orcid.org/0000-0003-2150-6935"
+ *   - family-names: "Wickert"
+ *     given-names: "Andrew D."
+ *     orcid: "https://orcid.org/0000-0000-0000-0000"
+ *   - family-names: "Community"
+ *     given-names: "Open Source Hardware"
+ *   title: "DS3231"
+ *   version: 1.1.0
+ *   doi: 10.5281/zenodo.2008621
+ *   date-released: 2021-12-06
+ *   url: "https://github.com/NorthernWidget/DS3231"
+ * ------------------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------------- *
+ *             Credits to whom it is due                              TM1637
+ * ------------------------------------------------------------------------- *
+ * For the TM1637 display module library:
+ * 
+ * author:
+ * - avishorp
+ * - url: https://github.com/avishorp/TM1637
+ * ------------------------------------------------------------------------- */
 
 #include <Arduino.h>
 #include <TM1637Display.h>
@@ -37,7 +69,7 @@
 #include <DS3231.h>
 #include <Wire.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG == 1
   #define debugstart(x) Serial.begin(x)
@@ -54,10 +86,10 @@
  * -------------------------------------------------------------------------- */
 DS3231 myRTC;                       // --- clock object
 
-bool century = false;               //
-bool h12Flag;                       //
-bool pmFlag;                        //
-bool showDots = true;               //
+bool century = false;               // century roll-over bit
+bool h12Flag;                       // 12/ 24 flag returned using getHour()
+bool pmFlag;                        // AM / PM flag returned using getHour()
+bool showDots = true;               // dots blinker boolean
 
 /* -------------------------------------------------------------------------- *
  * Definitions for display module
@@ -69,40 +101,38 @@ TM1637Display display(CLK, DIO);    // display object
 
 
 /* -------------------------------------------------------------------------- *
- * General global definitions
+ * Global definitions for pins used
  * -------------------------------------------------------------------------- */
 #define DATETIME 4                  // Switch between date & time display
 #define CLOCKSET 5                  // Button to set clock values
 #define CLOCKUP  6                  // move value up
 #define CLOCKDWN 7                  // move value down
 
-const uint8_t SEG_DONE[] = {
-  SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,   // O
-  SEG_C | SEG_E | SEG_G,                           // n
-  SEG_A | SEG_D | SEG_E | SEG_F | SEG_G            // E
-  };
-
+/* -------------------------------------------------------------------------- *
+ * Global definitions for timing
+ * -------------------------------------------------------------------------- */
 #define timeDispInterval 1000
-
 long timeDispPreviousMillis = 1000; // Make timeouts work first time
 
 
 void setup()
 {
-  debugstart(115200);
-  debugln("Program start");
+  debugstart(115200);               // only when 
+  debugln("Program start");         //  debugging is on
   
   Wire.begin();                     // Start the I2C interface
   
   /* ------------------------------------------------------------------------ *
-   * Set pins for input, make them default high
+   * Set these pins for input, make them default high
    * ------------------------------------------------------------------------ */
   for (int PIN=DATETIME; PIN<=CLOCKDWN; PIN++) {
     pinMode(PIN, INPUT);         // Setup date time pin
     digitalWrite(PIN, HIGH);     //  to switch date / time
   }
   
+  /* ------------------------------------------------------------------------ *
+   * Initialize the display
+   * ------------------------------------------------------------------------ */
   display.clear();                  // Clear LED display
   display.setBrightness( 1 );      // Start with low brightness
   
@@ -116,14 +146,12 @@ void setup()
    * Set time to individual values for time and date
    *  after setting the clock, comment out these lines!
    * ------------------------------------------------------------------------ */
-  /* ------------------------------------------------------------------------ *
-  myRTC.setYear((byte)22);
-  myRTC.setMonth((byte)12);
-  myRTC.setDate((byte)31);
-  myRTC.setHour((byte)13);
-  myRTC.setMinute((byte)30);
-  myRTC.setSecond((byte)30);
-   * ------------------------------------------------------------------------ */
+  //myRTC.setYear((byte)22);
+  //myRTC.setMonth((byte)12);
+  //myRTC.setDate((byte)31);
+  //myRTC.setHour((byte)13);
+  //myRTC.setMinute((byte)30);
+  //myRTC.setSecond((byte)30);
 
   /* ------------------------------------------------------------------------ *
    * Set for 24 hour clock
@@ -147,9 +175,8 @@ void loop() {
     }
   }
 
-  /*                        does the switch indicate we have to set the clock? */
-  if (digitalRead(CLOCKSET) == 0) {
-    delay(300);
+  if (digitalRead(CLOCKSET) == 0) { // do we have to set the clock?
+    delay(300);                     // Bouce delay
     setClock();
   }
 }
@@ -179,15 +206,15 @@ void showTime() {
 
 
 /* -------------------------------------------------------------------------- *
- * Routine to set six values in the clock, indicated by the left display::
+ * Routine to set six values in the clock, indicated by the left display:
  *  1. year   2. month    3. date
  *  4. hour   5. minute   6. second
  * -------------------------------------------------------------------------- */
 void setClock() {
   display.clear();                  // Clear LED display
   
-  int setVal = 1;
-  byte valueToSet = 0;
+  int setVal;
+  byte valueToSet;
   for (setVal=1; setVal<=6; setVal++) {
     display.showNumberDec(setVal, true, 1, 0);
 
@@ -244,18 +271,18 @@ byte setValue(byte valueToSet) {
     display.showNumberDec(valueToSet, true, 2, 2);
         
     if (digitalRead(CLOCKUP) == 0) {
-      delay(300);
-      valueToSet++;
+      delay(300);                   // Bouce delay
+      valueToSet++;                 // Increment value
     }
 
     if (digitalRead(CLOCKDWN) == 0) {
-      delay(300);
-      valueToSet--;
+      delay(300);                   // Bouce delay
+      valueToSet--;                 // Decrement value
     }
     
     if (digitalRead(CLOCKSET) == 0) {
-      delay(300);
-      break;
+      delay(300);                   // Bouce delay
+      break;                        // Return
     }
   }
   return valueToSet;
