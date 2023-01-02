@@ -19,7 +19,7 @@ There are seven numbered settings.
 The setting number is indicated in the first digit:
 1. set the year value (00-99)
 2. set the month value (01-12)
-3. set the date value (01-31) <<== user beware of proper value with respect to month value
+3. set the date value (01-31) <<== beware of proper value with respect to month value
 4. set the hour value (00-23)
 5. set the minute value (00-59)
 6. set the second value (00-59)
