@@ -8,9 +8,10 @@
  *   0.2  : Built in setting the clock
  *   0.3  : Credits for used libraries
  *          Code cleanup and more comments
+ *   0.4  : Built in brightness adjusting
  *   
  * ------------------------------------------------------------------------- */
-#define progVersion "0.3"                   // Program version definition
+#define progVersion "0.4"                   // Program version definition
 /* ------------------------------------------------------------------------- *
  *             GNU LICENSE CONDITIONS
  * ------------------------------------------------------------------------- *
@@ -109,12 +110,16 @@ TM1637Display display(CLK, DIO);    // display object
 #define CLOCKDWN 7                  // move value down
 
 /* -------------------------------------------------------------------------- *
- * Global definitions for timing
+ * Global definitions
  * -------------------------------------------------------------------------- */
 #define timeDispInterval 1000
 long timeDispPreviousMillis = 1000; // Make timeouts work first time
 
+int brightness = 1;
 
+/* -------------------------------------------------------------------------- *
+ * setup() initialization routine
+ * -------------------------------------------------------------------------- */
 void setup()
 {
   debugstart(115200);               // only when 
@@ -134,7 +139,7 @@ void setup()
    * Initialize the display
    * ------------------------------------------------------------------------ */
   display.clear();                  // Clear LED display
-  display.setBrightness( 1 );      // Start with low brightness
+  display.setBrightness(brightness);// Start with low brightness
   
   /* ------------------------------------------------------------------------ *
    * Set time to Epoch for local time, see: https://www.epochconverter.com/ 
@@ -215,45 +220,50 @@ void setClock() {
   
   int setVal;
   byte valueToSet;
-  for (setVal=1; setVal<=6; setVal++) {
+  for (setVal=1; setVal<=7; setVal++) {
     display.showNumberDec(setVal, true, 1, 0);
 
     switch (setVal) {
       case 1:
         valueToSet = myRTC.getYear();
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 00, 99);
         myRTC.setYear((byte)valueToSet);
         break;
 
       case 2:
         valueToSet = myRTC.getMonth(century);
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 01, 12);
         myRTC.setMonth((byte)valueToSet);
         break;
         
       case 3:
         valueToSet = myRTC.getDate();
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 01, 31);
         myRTC.setDate((byte)valueToSet);
         break;
 
       case 4:
         valueToSet = myRTC.getHour(h12Flag, pmFlag);
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 01, 23);
         myRTC.setHour((byte)valueToSet);
         break;
 
       case 5:
         valueToSet = myRTC.getMinute();
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 00, 59);
         myRTC.setMinute((byte)valueToSet);
         break;
 
       case 6:
         valueToSet = myRTC.getSecond();
-        valueToSet = setValue(valueToSet);
+        valueToSet = setValue(valueToSet, setVal, 00, 59);
         myRTC.setSecond((byte)valueToSet);
         break;
+        
+      case 7:
+        valueToSet = brightness;
+        valueToSet = setValue(valueToSet, setVal, 1, 7);
+        brightness = valueToSet;
         
       default:
         break;        
@@ -264,9 +274,8 @@ void setClock() {
 
 /* -------------------------------------------------------------------------- *
  * Routine to change a values from the clock
- *  range of value is not checked
  * -------------------------------------------------------------------------- */
-byte setValue(byte valueToSet) {
+byte setValue(byte valueToSet, int num, int low, int high) {
   while (1) {
     display.showNumberDec(valueToSet, true, 2, 2);
         
@@ -280,6 +289,13 @@ byte setValue(byte valueToSet) {
       valueToSet--;                 // Decrement value
     }
     
+    if (valueToSet <  low) valueToSet = low;
+    if (valueToSet > high) valueToSet = high;
+    
+    if (num == 7) {
+      display.setBrightness(valueToSet); // New value for display brightness
+    }
+
     if (digitalRead(CLOCKSET) == 0) {
       delay(300);                   // Bouce delay
       break;                        // Return
