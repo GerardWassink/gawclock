@@ -25,3 +25,9 @@ The setting number is indicated in the first digit:
 5. set the minute value (00-59)
 6. set the second value (00-59)
 7. set the brightness value (1-7)
+
+## Images
+
+#### Construction
+
+![construction](./gfx/IMG_3176.JPG "Construction")
