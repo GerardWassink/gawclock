@@ -1,7 +1,8 @@
 # gawclock
 
 This is my take at a digital clock, centered around an ATMEGA328P chip.
-Time is being kept by a DS3231 RTC module.
+Time is being kept by a DS3231 RTC module. 
+It hosts a CR2032 battery, keeping the time when a power outage occurs.
 The display is a TM1637 module.
 Both with their respective libraries (credits in the code).
 
@@ -11,9 +12,9 @@ Both with their respective libraries (credits in the code).
 One switch (SPDT) is used to switch the display between time and date.
 
 #### Settings
-Three buttons are used for settings:
+Three push buttons are used for settings:
 - one for starting the setting sequence
-- two for moving the value up and down respectively
+- two for moving the values up and down respectively
 
 There are seven numbered settings. 
 The setting number is indicated in the first digit:
