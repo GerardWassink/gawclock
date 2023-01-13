@@ -38,5 +38,5 @@ The setting number is indicated in the first digit:
 
 #### Completed
 
-![completed](./gfx/IMG_3178.JPG "Completed")
+![completed](./gfx/IMG_3177.JPG "Completed")
 
