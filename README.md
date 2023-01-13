@@ -28,6 +28,15 @@ The setting number is indicated in the first digit:
 
 ## Images
 
-#### Construction
+### Construction
 
 ![construction](./gfx/IMG_3176.JPG "Construction")
+
+### Switches and buttons
+
+![Switches and buttons](./gfx/IMG_3178.JPG "Switches and buttons")
+
+#### Completed
+
+![completed](./gfx/IMG_3178.JPG "Completed")
+
