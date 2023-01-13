@@ -6,6 +6,10 @@ It hosts a CR2032 battery, keeping the time when a power outage occurs.
 The display is a TM1637 module.
 Both with their respective libraries (credits in the code).
 
+In the construction I used the old casing from an old nixie clock my father built way back.
+That clock did not work anymore, so I recreated it with modern parts.
+It's an hommage to my father.
+
 ## Operating
 
 #### Date - Time
