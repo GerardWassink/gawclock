@@ -10,9 +10,11 @@
  *          Code cleanup and more comments
  *   0.4  : Built in brightness adjusting
  *   1.0  : Some code cleanup
+ *   1.1  : Updated pin numbers for new clock
+ *          Default to show time when datetime button not implemented   
  *   
  * ------------------------------------------------------------------------- */
-#define progVersion "1.0"                   // Program version definition
+#define progVersion "1.1"                   // Program version definition
 /* ------------------------------------------------------------------------- *
  *             GNU LICENSE CONDITIONS
  * ------------------------------------------------------------------------- *
@@ -105,10 +107,10 @@ TM1637Display display(CLK, DIO);    // display object
 /* -------------------------------------------------------------------------- *
  * Global definitions for pins used
  * -------------------------------------------------------------------------- */
-#define DATETIME 4                  // Switch between date & time display
-#define CLOCKSET 5                  // Button to set clock values
-#define CLOCKUP  6                  // move value up
-#define CLOCKDWN 7                  // move value down
+#define DATETIME 4                 // Switch between date & time display
+#define CLOCKSET 5                 // Button to set clock values
+#define CLOCKUP  6                 // move value up
+#define CLOCKDWN 7                 // move value down
 
 /* -------------------------------------------------------------------------- *
  * Global definitions
@@ -123,10 +125,10 @@ int brightness = 1;
  * -------------------------------------------------------------------------- */
 void setup()
 {
-  debugstart(115200);               // only when 
-  debugln("Program start");         //  debugging is on
+  debugstart(9600);                // only when 
+  debugln("Program start");        //  debugging is on
   
-  Wire.begin();                     // Start the I2C interface
+  Wire.begin();                    // Start the I2C interface
   
   /* ------------------------------------------------------------------------ *
    * Set these pins for input, make them default high
@@ -135,7 +137,7 @@ void setup()
     pinMode(PIN, INPUT);         // Setup pin for input
     digitalWrite(PIN, HIGH);     //  and engage pull-up to make in high
   }
-  
+
   /* ------------------------------------------------------------------------ *
    * Initialize the display
    * ------------------------------------------------------------------------ */
@@ -152,17 +154,18 @@ void setup()
    * Set time to individual values for time and date
    *  after setting the clock, comment out these lines!
    * ------------------------------------------------------------------------ */
-  //myRTC.setYear((byte)22);
-  //myRTC.setMonth((byte)12);
-  //myRTC.setDate((byte)31);
-  //myRTC.setHour((byte)13);
-  //myRTC.setMinute((byte)30);
-  //myRTC.setSecond((byte)30);
+  //myRTC.setYear((byte)23);
+  //myRTC.setMonth((byte)07);
+  //myRTC.setDate((byte)14);
+  //myRTC.setHour((byte)15);
+  //myRTC.setMinute((byte)42);
+  //myRTC.setSecond((byte)00);
 
   /* ------------------------------------------------------------------------ *
    * Set for 24 hour clock
    * ------------------------------------------------------------------------ */
   myRTC.setClockMode(false);
+
 }
 
 
@@ -177,7 +180,7 @@ void loop() {
                                     // Depending on switch, show date or time
   if(currentMillis - timeDispPreviousMillis > timeDispInterval) {
     timeDispPreviousMillis = currentMillis;  // save the last time we displayed
-    if (digitalRead(DATETIME)) {
+    if (!digitalRead(DATETIME)) {
       showDate();
     } else {
       showTime();
